@@ -1,0 +1,63 @@
+services:
+  9router:
+    image: decolua/9router:latest
+    container_name: 9router
+    restart: always
+    ports:
+      - "20128:20128"
+    volumes:
+      - 9router-data:/app/data
+    environment:
+      # 9Router environment contract
+      # This file reflects actual runtime usage in the current codebase.
+
+      # Required (read from environment with safe defaults)
+      JWT_SECRET: "${JWT_SECRET:-change-me-to-a-long-random-secret}"
+      INITIAL_PASSWORD: "${INITIAL_PASSWORD:-change-me}"
+      DATA_DIR: "/app/data"
+
+      # Recommended runtime variables
+      PORT: "20128"
+      NODE_ENV: "production"
+
+      # Recommended security and ops variables
+      API_KEY_SECRET: "${API_KEY_SECRET:-change-me-to-a-long-random-secret}"
+      MACHINE_ID_SALT: "${MACHINE_ID_SALT:-endpoint-proxy-salt}"
+      ENABLE_REQUEST_LOGS: "false"
+      OBSERVABILITY_ENABLED: "true"
+      AUTH_COOKIE_SECURE: "false"
+      REQUIRE_API_KEY: "false"
+
+      # Cloud sync variables
+      BASE_URL: "http://localhost:20128"
+      CLOUD_URL: "https://9router.com"
+      NEXT_PUBLIC_BASE_URL: "http://localhost:20128"
+      NEXT_PUBLIC_CLOUD_URL: "https://9router.com"
+
+      # Optional outbound proxy variables (disabled by default)
+      # HTTP_PROXY: "http://127.0.0.1:7890"
+      # HTTPS_PROXY: "http://127.0.0.1:7890"
+      # ALL_PROXY: "socks5://127.0.0.1:7890"
+      # NO_PROXY: "localhost,127.0.0.1"
+
+      # Currently unused by application runtime (kept as reference)
+      # INSTANCE_NAME: "9router"
+
+      HOSTNAME: "0.0.0.0"
+      HEADROOM_URL: "http://headroom:8787"
+      TZ: "Asia/Bangkok"
+      
+
+    depends_on:
+      - headroom
+
+  headroom:
+    image: ghcr.io/chopratejas/headroom:latest
+    container_name: headroom
+    restart: always
+    ports:
+      - "8787:8787"
+
+volumes:
+  9router-data:
+    name: 9router-data
