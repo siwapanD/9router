@@ -25,6 +25,11 @@ ENV PORT=20128
 ENV HOSTNAME=0.0.0.0
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATA_DIR=/app/data
+ENV TZ=Asia/Bangkok
+
+RUN apk --no-cache add tzdata && \
+  cp /usr/share/zoneinfo/Asia/Bangkok /etc/localtime && \
+  echo "Asia/Bangkok" > /etc/timezone
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/static ./.next/static
