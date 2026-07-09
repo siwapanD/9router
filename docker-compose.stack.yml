@@ -1,0 +1,42 @@
+services:
+  9router:
+    image: decolua/9router:latest
+    restart: always
+    ports:
+      - "${APP_PORT:-20128}:20128"
+    volumes:
+      - 9router-data:/app/data
+    environment:
+      JWT_SECRET: "${JWT_SECRET:-change-me-to-a-long-random-secret}"
+      INITIAL_PASSWORD: "${INITIAL_PASSWORD:-change-me}"
+      DATA_DIR: "/app/data"
+
+      PORT: "20128"
+      NODE_ENV: "production"
+
+      API_KEY_SECRET: "${API_KEY_SECRET:-change-me-to-a-long-random-secret}"
+      MACHINE_ID_SALT: "${MACHINE_ID_SALT:-endpoint-proxy-salt}"
+
+      ENABLE_REQUEST_LOGS: "false"
+      OBSERVABILITY_ENABLED: "true"
+      AUTH_COOKIE_SECURE: "false"
+      REQUIRE_API_KEY: "false"
+
+      BASE_URL: "http://localhost:20128"
+      CLOUD_URL: "https://9router.com"
+      NEXT_PUBLIC_BASE_URL: "http://localhost:20128"
+      NEXT_PUBLIC_CLOUD_URL: "https://9router.com"
+
+      HOSTNAME: "0.0.0.0"
+      HEADROOM_URL: "http://headroom:8787"
+      TZ: "Asia/Bangkok"
+
+    depends_on:
+      - headroom
+
+  headroom:
+    image: ghcr.io/chopratejas/headroom:latest
+    restart: always
+
+volumes:
+  9router-data:
