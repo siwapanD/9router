@@ -85,16 +85,20 @@ export async function GET(request, { params }) {
       if (!["codex", "xai"].includes(provider)) {
         return NextResponse.json({ error: "Proxy only supported for codex/xai" }, { status: 400 });
       }
-      const appPort = searchParams.get("app_port");
-      if (!appPort) {
-        return NextResponse.json({ error: "Missing app_port" }, { status: 400 });
+      // app_origin is the full scheme://host[:port] the dashboard is reachable at
+      // (derived from NEXT_PUBLIC_BASE_URL when set, else window.location.origin).
+      // Kept accepting legacy app_port for backward compat with older clients.
+      const appOrigin = searchParams.get("app_origin")
+        || (searchParams.get("app_port") ? `http://localhost:${searchParams.get("app_port")}` : null);
+      if (!appOrigin) {
+        return NextResponse.json({ error: "Missing app_origin" }, { status: 400 });
       }
       const state = searchParams.get("state");
       const codeVerifier = searchParams.get("code_verifier");
       const redirectUri = searchParams.get("redirect_uri");
       const result = provider === "xai"
-        ? await startXaiProxy(Number(appPort))
-        : await startCodexProxy(Number(appPort));
+        ? await startXaiProxy(appOrigin)
+        : await startCodexProxy(appOrigin);
       let serverSide = false;
       if (result.success && state && codeVerifier && redirectUri) {
         serverSide = provider === "xai"

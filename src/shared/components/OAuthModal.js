@@ -213,13 +213,34 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
       }
 
       // Authorization code flow - build redirect URI (some providers require fixed ports)
-      const appPort = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
+      // If NEXT_PUBLIC_BASE_URL is set (e.g. in Docker/remote), use it as the callback base.
+      // Otherwise fall back to the browser's window.location (local dev default).
+      const envBaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+      let appPort;
       let redirectUri;
       if (provider === "codex") {
+        // Codex always requires a fixed loopback port — env override not applicable
+        appPort = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
         redirectUri = "http://localhost:1455/auth/callback";
       } else if (provider === "xai") {
+        // xAI always requires a fixed loopback port — env override not applicable
+        appPort = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
         redirectUri = "http://127.0.0.1:56121/callback";
+      } else if (envBaseUrl) {
+        // Remote/Docker: derive port and callback from NEXT_PUBLIC_BASE_URL
+        try {
+          const parsedBase = new URL(envBaseUrl);
+          appPort = parsedBase.port || (parsedBase.protocol === "https:" ? "443" : "80");
+          const cleanBase = envBaseUrl.replace(/\/$/, "");
+          redirectUri = `${cleanBase}/callback`;
+        } catch {
+          // Malformed env URL — fall back to window.location
+          appPort = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
+          redirectUri = `http://localhost:${appPort}/callback`;
+        }
       } else {
+        // Local default: use window.location
+        appPort = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
         redirectUri = `http://localhost:${appPort}/callback`;
       }
 
@@ -239,7 +260,8 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
       if (provider === "codex") {
         try {
           const proxyUrl = new URL(`/api/oauth/codex/start-proxy`, window.location.origin);
-          proxyUrl.searchParams.set("app_port", appPort);
+          // Pass base origin string instead of just appPort
+          proxyUrl.searchParams.set("app_origin", envBaseUrl ? envBaseUrl.replace(/\/$/, "") : window.location.origin);
           proxyUrl.searchParams.set("state", data.state);
           proxyUrl.searchParams.set("code_verifier", data.codeVerifier);
           proxyUrl.searchParams.set("redirect_uri", redirectUri);
@@ -258,7 +280,8 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
       if (provider === "xai") {
         try {
           const proxyUrl = new URL(`/api/oauth/xai/start-proxy`, window.location.origin);
-          proxyUrl.searchParams.set("app_port", appPort);
+          // Pass base origin string instead of just appPort
+          proxyUrl.searchParams.set("app_origin", envBaseUrl ? envBaseUrl.replace(/\/$/, "") : window.location.origin);
           proxyUrl.searchParams.set("state", data.state);
           proxyUrl.searchParams.set("code_verifier", data.codeVerifier);
           proxyUrl.searchParams.set("redirect_uri", redirectUri);

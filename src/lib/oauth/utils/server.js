@@ -179,9 +179,10 @@ function renderCodexResultPage(success, message) {
 /**
  * Start Codex proxy on fixed port 1455.
  * Mode A (server-side): if any session was registered, proxy auto-exchanges + saves DB.
- * Mode B (channel fallback): if no session, proxy 302 redirects to app port for legacy channel-based flow.
+ * Mode B (channel fallback): if no session, proxy 302 redirects to appOrigin for legacy channel-based flow.
+ * @param {string} appOrigin - Full origin the dashboard is reachable at, e.g. "http://localhost:20128" or "https://my.domain.com"
  */
-export function startCodexProxy(appPort) {
+export function startCodexProxy(appOrigin) {
   return new Promise((resolve) => {
     if (codexProxyServer) {
       resolve({ success: true });
@@ -248,8 +249,9 @@ export function startCodexProxy(appPort) {
         return;
       }
 
-      // Mode B: legacy channel fallback — 302 redirect to app /callback
-      const redirectUrl = `http://localhost:${appPort}/callback${url.search}`;
+      // Mode B: legacy channel fallback — 302 redirect to app callback
+      // We assume appOrigin never has a trailing slash here
+      const redirectUrl = `${appOrigin}/callback${url.search}`;
       res.writeHead(302, { Location: redirectUrl });
       res.end();
       stopCodexProxy();
@@ -323,9 +325,10 @@ function renderXaiResultPage(success, message) {
 /**
  * Start xAI proxy on fixed port 56121.
  * Mode A (server-side): if any session was registered, proxy auto-exchanges + saves DB.
- * Mode B (channel fallback): if no session, proxy 302 redirects to app port.
+ * Mode B (channel fallback): if no session, proxy 302 redirects to appOrigin.
+ * @param {string} appOrigin - Full origin the dashboard is reachable at, e.g. "http://localhost:20128" or "https://my.domain.com"
  */
-export function startXaiProxy(appPort) {
+export function startXaiProxy(appOrigin) {
   return new Promise((resolve) => {
     if (xaiProxyServer) {
       resolve({ success: true });
@@ -391,7 +394,7 @@ export function startXaiProxy(appPort) {
       }
 
       // Mode B: legacy fallback redirect
-      const redirectUrl = `http://localhost:${appPort}/callback${url.search}`;
+      const redirectUrl = `${appOrigin}/callback${url.search}`;
       res.writeHead(302, { Location: redirectUrl });
       res.end();
       stopXaiProxy();
