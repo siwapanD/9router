@@ -296,7 +296,6 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
       // If NEXT_PUBLIC_BASE_URL is set (e.g. in Docker/remote), use it as the callback base.
       // Otherwise fall back to the browser's window.location (local dev default).
       const envBaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-      const windowOrigin = window.location.origin.replace(/\/$/, "");
       let appPort;
       let redirectUri;
       if (provider === "codex") {
@@ -317,12 +316,12 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
         } catch {
           // Malformed env URL — fall back to window.location
           appPort = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
-          redirectUri = `${windowOrigin}/callback`;
+          redirectUri = `http://localhost:${appPort}/callback`;
         }
       } else {
         // Local default: use window.location
         appPort = window.location.port || (window.location.protocol === "https:" ? "443" : "80");
-        redirectUri = `${windowOrigin}/callback`;
+        redirectUri = `http://localhost:${appPort}/callback`;
       }
 
       // Build authorize URL first to get codeVerifier/state for codex server-side mode
