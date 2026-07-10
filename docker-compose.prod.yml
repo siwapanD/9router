@@ -29,9 +29,9 @@ services:
       REQUIRE_API_KEY: "false"
 
       # Cloud sync variables
-      BASE_URL: "http://localhost:20128"
+      BASE_URL: "${BASE_URL}"
       CLOUD_URL: "https://9router.com"
-      NEXT_PUBLIC_BASE_URL: "http://localhost:20128"
+      NEXT_PUBLIC_BASE_URL: "${NEXT_PUBLIC_BASE_URL}"
       NEXT_PUBLIC_CLOUD_URL: "https://9router.com"
 
       # Optional outbound proxy variables (disabled by default)
