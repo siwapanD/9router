@@ -12,7 +12,7 @@ function maskApiKey(key) {
 const PENDING_TIMEOUT_MS = 60 * 1000;
 const RING_CAP = 50;
 const CONN_CACHE_TTL_MS = 30 * 1000;
-const PERIOD_MS = { "24h": 86400000, "7d": 604800000, "30d": 2592000000, "60d": 5184000000 };
+const PERIOD_MS = { "24h": 86400000, "7d": 604800000, "30d": 2592000000, "90d": 7776000000 };
 
 // In-memory state shared across Next.js modules
 if (!global._pendingRequests) global._pendingRequests = { byModel: {}, byAccount: {} };
@@ -447,7 +447,7 @@ export async function getUsageStats(period = "all") {
   const useDailySummary = period !== "24h" && period !== "today";
 
   if (useDailySummary) {
-    const periodDays = { "7d": 7, "30d": 30, "60d": 60 };
+    const periodDays = { "7d": 7, "30d": 30, "90d": 90 };
     const maxDays = periodDays[period] || null;
     const dayRows = loadDaysInRange(db, maxDays);
 
@@ -710,9 +710,24 @@ export async function getChartData(period = "7d") {
     return buckets;
   }
 
-  const bucketCount = period === "7d" ? 7 : period === "30d" ? 30 : 60;
   const today = new Date();
   const labelFn = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+  if (period === "all") {
+    // No fixed window — one bucket per day that actually has data, oldest first.
+    const dayRows = loadDaysInRange(db, null).sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+    return dayRows.map((r) => {
+      const dayData = parseJson(r.data, {});
+      const [y, m, d] = r.dateKey.split("-").map(Number);
+      return {
+        label: labelFn(new Date(y, m - 1, d)),
+        tokens: (dayData.promptTokens || 0) + (dayData.completionTokens || 0),
+        cost: dayData.cost || 0,
+      };
+    });
+  }
+
+  const bucketCount = period === "7d" ? 7 : period === "30d" ? 30 : 90;
 
   // Build map of dateKey → day data
   const dayRows = loadDaysInRange(db, bucketCount);
