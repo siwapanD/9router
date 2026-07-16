@@ -238,6 +238,9 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
   } else if (tokenSaverEnabled && headroomEnabled) log?.warn?.("HEADROOM", `skipped: ${headroomDiagnostics.reason || "compression unavailable"}${headroomDiagnostics.endpoint ? ` (${headroomDiagnostics.endpoint})` : ""}`);
 >>>>>>> c992689 (feat(rtk): add X-9Router-Token-Saver header to bypass token savers per request)
 
+  // Token-saver flags accumulator for the single "⚙" log line below.
+  const xf = [];
+
   // Caveman: inject terse-style system prompt
   if (tokenSaverEnabled && cavemanEnabled && cavemanLevel) {
     injectCaveman(translatedBody, finalFormat, cavemanLevel);
