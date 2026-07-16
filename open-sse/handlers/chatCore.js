@@ -179,6 +179,9 @@ export async function handleChatCore({ body, modelInfo, credentials, log, onCred
   // Token-saver flags accumulator for the single "⚙" log line below.
   const xf = [];
 
+  // Token-saver flags accumulator for the single "⚙" log line below.
+  const xf = [];
+
   // Caveman: inject terse-style system prompt
   if (tokenSaverEnabled && cavemanEnabled && cavemanLevel) {
     injectCaveman(translatedBody, finalFormat, cavemanLevel);
